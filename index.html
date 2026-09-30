@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Foxxy Music</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    button { user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+    body { background: #121212; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; color: white; display: flex; flex-direction: column; align-items: center; user-select: none; }
+    .search-bar { display: flex; width: 90%; max-width: 400px; margin: 20px auto; border-radius: 25px; overflow: hidden; background: #282828; }
+    .search-bar input { flex: 1; border: none; padding: 12px 15px; outline: none; background: transparent; color: white; font-size: 14px; }
+    .search-bar button { background: #1db954; color: white; border: none; padding: 0 15px; cursor: pointer; font-weight: bold; }
+    .album-art { position: relative; width: 250px; height: 250px; border-radius: 10px; margin-top: 20px; background: #333 center/cover no-repeat; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; overflow: hidden; flex-direction: column; }
+    .default-icon { fill: #1DB954; width: 90px; height: 90px; opacity: 0.6; margin-bottom: 10px; }
+    .default-text { color: #1DB954; font-size: 1.8rem; font-weight: 600; opacity: 0.6; }
+    .song-title { font-size: 1.2em; font-weight: 600; margin-top: 20px; text-align: center; padding: 0 15px; }
+    .song-artist { font-size: 0.9em; opacity: 0.8; text-align: center; margin-top: 5px; }
+    .controls { margin-top: 30px; display: flex; justify-content: center; align-items: center; gap: 15px; }
+    .controls button { background: #1db954; border: none; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s ease; display: flex; align-items: center; justify-content: center; }
+    .controls button:hover { transform: scale(1.1); }
+    .controls svg { width: 28px; height: 28px; fill: white; }
+    #nextBtn, #volumeBtn { width: 50px; height: 50px; }
+    #nextBtn svg, #volumeBtn svg { width: 22px; height: 22px; }
+    .progress-container { margin-top: 25px; width: 80%; max-width: 400px; display: flex; flex-direction: column; align-items: center; }
+    .time { display: flex; justify-content: space-between; width: 100%; font-size: 0.8em; opacity: 0.8; margin-bottom: 5px; }
+    .progress-bar { width: 100%; -webkit-appearance: none; height: 5px; background: rgba(255,255,255,0.3); outline: none; border-radius: 5px; overflow: hidden; cursor: pointer; }
+    .progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #1db954; cursor: pointer; box-shadow: -400px 0 0 400px #1db954; }
+    .volume-container { display: flex; align-items: center; position: relative; }
+    #volumeControl { width: 0; opacity: 0; transition: width 0.3s ease, opacity 0.3s ease; margin-left: 5px; cursor: pointer; }
+    .volume-container.show #volumeControl { width: 80px; opacity: 1; }
+    #playlistPanel { display: none; position: fixed; right: 20px; bottom: 20px; width: 280px; background: #181818; padding: 12px; border-radius: 12px; max-height: 55vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 1000; }
+    #playlistPanel input { width: calc(100% - 20px); padding: 8px 10px; margin-bottom: 8px; border-radius: 6px; border: none; background: #282828; color: white; font-size: 14px; }
+    #playlistPanel button { background: #1db954; border: none; color: white; padding: 6px 12px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    #playlistPanel ul { list-style: none; padding: 0; margin: 0; }
+    #playlistPanel li { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 8px; cursor: pointer; }
+    #playlistPanel li:hover { background: rgba(29,185,84,0.15); }
+    #playlistPanel li img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+    #playlistPanel li span { flex: 1; font-size: 14px; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .delete-btn { margin-left: auto; background: #e63946 !important; color: white; border: none; padding: 2px 6px !important; border-radius: 4px; cursor: pointer; font-size: 12px !important; }
+
+    /* ===== Foxxy Home Page (added) ===== */
+    body.home-open .album-art, body.home-open .song-title, body.home-open .song-artist,
+    body.home-open .controls, body.home-open .progress-container { display: none; }
+    #homeSection { display: none; width: 90%; max-width: 400px; margin: 0 auto 30px; }
+    body.home-open #homeSection { display: block; }
+    #homeBar { width: 90%; max-width: 400px; margin: -5px auto 0; }
+    body.home-open #homeBar { display: none; }
+    .pill-btn { background: #282828; color: #eee; border: none; border-radius: 20px; padding: 7px 14px; font: 600 13px 'Poppins', sans-serif; cursor: pointer; }
+    .pill-btn:hover { background: #333; }
+    .home-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .home-head h2 { margin: 0; font-size: 1.15em; }
+    .home-head small { display: block; opacity: 0.6; font-weight: 400; font-size: 0.7em; margin-top: 2px; }
+    .home-actions { display: flex; gap: 6px; }
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cat-card { border: none; border-radius: 14px; padding: 16px 12px; min-height: 110px; text-align: left; color: white; cursor: pointer; font-family: 'Poppins', sans-serif; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 6px 18px rgba(0,0,0,0.4); transition: transform 0.2s ease; }
+    .cat-card:hover { transform: scale(1.04); }
+    .cat-card .emoji { font-size: 1.8em; }
+    .cat-card .name { font-weight: 600; font-size: 0.95em; }
+    .cat-card .sub { font-size: 0.7em; opacity: 0.8; }
+    .cat-Love { background: linear-gradient(135deg, #e91e63, #ff7aa2); }
+    .cat-Sad { background: linear-gradient(135deg, #3a5a8c, #1c2b4a); }
+    .cat-Melody { background: linear-gradient(135deg, #8e44ad, #5b2c83); }
+    .cat-Rock { background: linear-gradient(135deg, #e63946, #7a1c24); }
+    #onboard { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(18,18,18,0.97); overflow-y: auto; }
+    #onboard.show { display: flex; justify-content: center; align-items: flex-start; }
+    .ob-box { width: 90%; max-width: 400px; padding: 40px 0; }
+    .ob-box h2 { margin: 0 0 4px; }
+    .ob-box p { margin: 0 0 24px; opacity: 0.7; font-size: 0.9em; }
+    .ob-box h3 { font-size: 0.95em; margin: 20px 0 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chip { background: #282828; color: white; border: 2px solid transparent; border-radius: 22px; padding: 10px 18px; font: 600 14px 'Poppins', sans-serif; cursor: pointer; }
+    .chip.on { border-color: #1db954; background: rgba(29,185,84,0.2); }
+    .ob-go { margin-top: 30px; width: 100%; background: #1db954; color: white; border: none; border-radius: 25px; padding: 13px; font: 600 15px 'Poppins', sans-serif; cursor: pointer; }
+    .ob-go:disabled { opacity: 0.35; cursor: not-allowed; }
+    .ob-cancel { margin-top: 10px; width: 100%; background: none; color: #aaa; border: none; padding: 8px; font: 400 13px 'Poppins', sans-serif; cursor: pointer; }
+  </style>
+</head>
+
+<body>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search a song...">
+    <button onclick="searchSong()">Search</button>
+    <button onclick="togglePlaylistPanel()">Playlist</button>
+  </div>
+
+
+  <!-- ===== Foxxy Home Page (added) ===== -->
+  <div id="homeBar"><button class="pill-btn" id="homeBtn">&#127968; Home</button></div>
+
+  <div id="homeSection">
+    <div class="home-head">
+      <h2>Made for you<small id="homeSub"></small></h2>
+      <div class="home-actions">
+        <button class="pill-btn" id="nowPlayingBtn" style="display:none;">Now Playing</button>
+        <button class="pill-btn" id="editPrefsBtn">Edit</button>
+      </div>
+    </div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+
+  <div id="onboard">
+    <div class="ob-box">
+      <h2>Welcome to Foxxy &#127925;</h2>
+      <p>Pick your language and vibes to build your Home page.</p>
+      <h3>Language</h3>
+      <div class="chips" id="obLang"></div>
+      <h3>Vibe <span style="opacity:.6;font-weight:400;">(choose one or more)</span></h3>
+      <div class="chips" id="obVibe"></div>
+      <button class="ob-go" id="obGo" disabled>Continue</button>
+      <button class="ob-cancel" id="obCancel" style="display:none;">Cancel</button>
+    </div>
+  </div>
+
+  <div class="album-art" id="thumbnail">
+    <svg class="default-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/>
+    </svg>
+    <div class="default-text">Foxxy</div>
+  </div>
+
+  <div class="song-title" id="videoTitle">Song Title</div>
+  <div class="song-artist" id="videoArtist">Artist</div>
+
+  <div class="controls">
+
+    <button id="playPauseBtn" onclick="togglePlay()">
+      <svg id="playIcon" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+
+      <svg id="pauseIcon" style="display:none;" viewBox="0 0 24 24">
+        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+      </svg>
+    </button>
+
+    <!-- Uses YouTube's native queue next function -->
+    <button id="nextBtn" onclick="playNextSong()">
+      <svg viewBox="0 0 24 24">
+        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+      </svg>
+    </button>
+
+    <div class="volume-container">
+
+      <button id="volumeBtn" onclick="toggleVolumeSlider()">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+        </svg>
+      </button>
+
+      <input type="range" id="volumeControl" min="0" max="100" value="100">
+
+    </div>
+
+  </div>
+
+  <div class="progress-container">
+
+    <div class="time">
+      <span id="currentTime">0:00</span>
+      <span id="totalTime">0:00</span>
+    </div>
+
+    <input
+      type="range"
+      id="progressBar"
+      class="progress-bar"
+      value="0"
+      min="0"
+      max="100"
+    >
+
+  </div>
+
+  <div id="playlistPanel">
+
+    <input
+      type="text"
+      id="playlistInput"
+      placeholder="Add song to playlist..."
+    >
+
+    <button onclick="addPlaylistInputSong()">Add</button>
+
+    <ul id="playlist"></ul>
+
+  </div>
+
+  <div id="player" style="position:absolute; left:-9999px;"></div>
+
+<script>
+
+let player, isPlaying = false, interval;
+
+const apiKeys = [
+    "AIzaSyA6HuHCZSivAGvISxA4h3EglIQJgmee66k",
+    "AIzaSyCkUWUbVYjZDNRhNJBJ-NkN8ta3ga4vY3Y",
+    "AIzaSyD8TitWTpspygPuDnbilqeaLj9AG1krL48"
+];
+
+let currentKeyIndex = 0;
+
+let playlistSongs = JSON.parse(
+    localStorage.getItem('playlistSongs') || '[]'
+);
+
+let currentSongIndex = -1;
+let isDraggingProgress = false;
+
+let mixQueue = [];
+let mixPosition = -1;
+
+
+function getApiKey() {
+
+    const key = apiKeys[currentKeyIndex];
+
+    currentKeyIndex =
+        (currentKeyIndex + 1) % apiKeys.length;
+
+    return key;
+}
+
+
+function formatTime(sec) {
+
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+
+function onYouTubeIframeAPIReady() {
+
+    player = new YT.Player('player', {
+
+        height: '10',
+        width: '10',
+
+        playerVars: {
+            autoplay: 1,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0
+        },
+
+        events: {
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange
+        }
+
+    });
+}
+
+
+function onPlayerReady() {
+
+    interval = setInterval(updateProgress, 1000);
+
+    player.setVolume(
+        document.getElementById('volumeControl').value
+    );
+}
+
+
+function onPlayerStateChange(e) {
+
+    if (e.data === YT.PlayerState.PLAYING) {
+
+        isPlaying = true;
+
+        document.getElementById('playIcon').style.display = "none";
+        document.getElementById('pauseIcon').style.display = "block";
+
+    }
+
+    else if (e.data === YT.PlayerState.PAUSED) {
+
+        isPlaying = false;
+
+        document.getElementById('playIcon').style.display = "block";
+        document.getElementById('pauseIcon').style.display = "none";
+
+    }
+
+    else if (e.data === YT.PlayerState.ENDED) {
+
+        playNextSong();
+
+    }
+
+}
+
+
+/*
+  This function only fixes the metadata timing problem.
+
+  Some browsers take longer than 800ms to make the
+  new video's title / ID available through getVideoData().
+
+  Instead of changing your playback logic, we simply
+  retry a few times until YouTube provides the data.
+*/
+function updateNextSongInfo(attemptsLeft = 10) {
+
+    if (!player) return;
+
+    const data = player.getVideoData();
+
+    if (data && data.video_id && data.title) {
+
+        document.getElementById('videoTitle').innerText =
+            data.title;
+
+        document.getElementById('videoArtist').innerText =
+            data.author || "YouTube Mix";
+
+        document.getElementById('thumbnail').style.backgroundImage =
+            `url(https://img.youtube.com/vi/${data.video_id}/mqdefault.jpg)`;
+
+        return;
+    }
+
+    if (attemptsLeft > 0) {
+
+        setTimeout(() => {
+            updateNextSongInfo(attemptsLeft - 1);
+        }, 100);
+
+    }
+}
+
+
+// The Mix YouTube builds around a video doesn't always start on that exact
+// video, and its internal "next" queue disappears the moment we load a video
+// directly. So once the Mix's song list loads, we copy it into mixQueue and
+// drive playback/Next from that ourselves instead of relying on YouTube's
+// own playlist state.
+
+function correctToTargetSong(targetId, attemptsLeft) {
+
+    if (!targetId || !player) return;
+
+    const queue =
+        typeof player.getPlaylist === 'function'
+            ? player.getPlaylist()
+            : null;
+
+    if (queue && queue.length) {
+
+        mixQueue = queue;
+
+        mixPosition = queue.indexOf(targetId);
+
+        const nowPlaying =
+            typeof player.getVideoData === 'function'
+                ? player.getVideoData()
+                : null;
+
+        if (!nowPlaying || nowPlaying.video_id !== targetId) {
+
+            if (mixPosition > -1) {
+
+                player.playVideoAt(mixPosition);
+
+            }
+
+            else if (
+                typeof player.loadVideoById === 'function'
+            ) {
+
+                player.loadVideoById(targetId);
+
+            }
+
+        }
+
+        return;
+    }
+
+    if (attemptsLeft > 0) {
+
+        setTimeout(
+            () => correctToTargetSong(targetId, attemptsLeft - 1),
+            100
+        );
+
+    }
+
+    else {
+
+        const nowPlaying =
+            typeof player.getVideoData === 'function'
+                ? player.getVideoData()
+                : null;
+
+        if (
+            (!nowPlaying || nowPlaying.video_id !== targetId) &&
+            typeof player.loadVideoById === 'function'
+        ) {
+
+            player.loadVideoById(targetId);
+
+        }
+
+    }
+}
+
+
+// Loads a song AND YouTube's native automatic Mix/Radio playlist queue
+
+function playVideoData(
+    id,
+    title,
+    thumb,
+    channelTitle = "YouTube Mix"
+) {
+
+    currentSongIndex = -1;
+
+    mixQueue = [];
+
+    mixPosition = -1;
+
+    // Load YouTube's native radio playlist queue automatically generated for this video ID
+
+    if (
+        player &&
+        typeof player.loadPlaylist === 'function'
+    ) {
+
+        player.loadPlaylist({
+
+            list: 'RD' + id,
+
+            listType: 'playlist',
+
+            index: 0
+
+        });
+
+        correctToTargetSong(id, 6);
+
+    }
+
+    document.getElementById('videoTitle').innerText =
+        title;
+
+    document.getElementById('videoArtist').innerText =
+        channelTitle;
+
+    document.getElementById('thumbnail').style.backgroundImage =
+        `url(${thumb})`;
+
+    document.querySelector('.default-icon').style.display =
+        'none';
+
+    document.querySelector('.default-text').style.display =
+        'none';
+
+    isPlaying = true;
+
+    document.getElementById('playIcon').style.display =
+        "none";
+
+    document.getElementById('pauseIcon').style.display =
+        "block";
+}
+
+
+function togglePlay() {
+
+    if (!isPlaying) {
+
+        player.playVideo();
+
+    }
+
+    else {
+
+        player.pauseVideo();
+
+    }
+
+}
+
+
+// Steps through the saved playlist first,
+// then the current song's Mix queue,
+// then falls back to YouTube's own native next().
+
+function playNextSong() {
+
+    if (
+        currentSongIndex >= 0 &&
+        currentSongIndex < playlistSongs.length - 1
+    ) {
+
+        currentSongIndex++;
+
+        const song =
+            playlistSongs[currentSongIndex];
+
+        playVideoData(
+            song.id,
+            song.name,
+            song.thumb,
+            song.channel
+        );
+
+        return;
+    }
+
+
+    if (
+        mixQueue.length &&
+        mixPosition < mixQueue.length - 1
+    ) {
+
+        mixPosition++;
+
+        const nextId =
+            mixQueue[mixPosition];
+
+        player.loadVideoById(nextId);
+
+        // FIX:
+        // Instead of checking only once after 800ms,
+        // keep checking until YouTube provides the metadata.
+
+        setTimeout(() => {
+
+            updateNextSongInfo();
+
+        }, 100);
+
+        return;
+    }
+
+
+    if (
+        player &&
+        typeof player.nextVideo === 'function'
+    ) {
+
+        player.nextVideo();
+
+        // FIX:
+        // Slower browsers may need more than 800ms.
+        // The retry function handles that without changing
+        // the existing next-video logic.
+
+        setTimeout(() => {
+
+            updateNextSongInfo();
+
+        }, 100);
+
+    }
+
+}
+
+
+function searchSong(query, save = false) {
+
+    query =
+        query ||
+        document.getElementById('searchInput').value.trim();
+
+    if (!query) return;
+
+    const apiKey = getApiKey();
+
+    fetch(
+        `https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&key=${apiKey}&type=video&videoCategoryId=10&maxResults=1`
+    )
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        if (
+            !data.items ||
+            !data.items.length
+        ) return;
+
+        const video = data.items[0];
+
+        if (!save) {
+
+            playVideoData(
+                video.id.videoId,
+                video.snippet.title,
+                video.snippet.thumbnails.medium.url,
+                video.snippet.channelTitle
+            );
+
+        }
+
+        else {
+
+            playlistSongs.push({
+
+                name: video.snippet.title,
+
+                thumb:
+                    video.snippet.thumbnails.default.url,
+
+                id:
+                    video.id.videoId,
+
+                channel:
+                    video.snippet.channelTitle
+
+            });
+
+            localStorage.setItem(
+                'playlistSongs',
+                JSON.stringify(playlistSongs)
+            );
+
+            updatePlaylistUI();
+
+        }
+
+    });
+
+}
+
+
+function togglePlaylistPanel() {
+
+    const panel =
+        document.getElementById('playlistPanel');
+
+    panel.style.display =
+        panel.style.display === 'none'
+            ? 'block'
+            : 'none';
+
+}
+
+
+function addPlaylistInputSong() {
+
+    const songName =
+        document.getElementById('playlistInput')
+        .value
+        .trim();
+
+    if (!songName) return;
+
+    searchSong(songName, true);
+
+    document.getElementById('playlistInput').value =
+        '';
+
+}
+
+
+function updatePlaylistUI() {
+
+    const ul =
+        document.getElementById('playlist');
+
+    ul.innerHTML = '';
+
+    playlistSongs.forEach((song, idx) => {
+
+        const li =
+            document.createElement('li');
+
+        const img =
+            document.createElement('img');
+
+        img.src = song.thumb;
+
+        li.appendChild(img);
+
+        const span =
+            document.createElement('span');
+
+        span.textContent = song.name;
+
+        li.appendChild(span);
+
+
+        li.onclick = (e) => {
+
+            if (
+                e.target.classList.contains('delete-btn')
+            ) return;
+
+            currentSongIndex = idx;
+
+            playVideoData(
+                song.id,
+                song.name,
+                song.thumb,
+                song.channel
+            );
+
+        };
+
+
+        const del =
+            document.createElement('button');
+
+        del.textContent = "X";
+
+        del.className = "delete-btn";
+
+
+        del.onclick = (e) => {
+
+            e.stopPropagation();
+
+            playlistSongs.splice(idx, 1);
+
+            localStorage.setItem(
+                'playlistSongs',
+                JSON.stringify(playlistSongs)
+            );
+
+            updatePlaylistUI();
+
+        };
+
+
+        li.appendChild(del);
+
+        ul.appendChild(li);
+
+    });
+
+}
+
+
+function toggleVolumeSlider() {
+
+    document
+        .querySelector('.volume-container')
+        .classList
+        .toggle('show');
+
+}
+
+
+document
+    .getElementById('volumeControl')
+    .addEventListener(
+        'input',
+        function() {
+
+            if (
+                player &&
+                typeof player.setVolume === 'function'
+            ) {
+
+                player.setVolume(this.value);
+
+            }
+
+        }
+    );
+
+
+const progressBar =
+    document.getElementById('progressBar');
+
+
+progressBar.addEventListener(
+    'mousedown',
+    () => isDraggingProgress = true
+);
+
+
+progressBar.addEventListener(
+    'mouseup',
+    () => isDraggingProgress = false
+);
+
+
+progressBar.addEventListener(
+    'change',
+    function() {
+
+        if (
+            player &&
+            typeof player.getDuration === 'function'
+        ) {
+
+            player.seekTo(
+                (this.value / 100) *
+                player.getDuration(),
+                true
+            );
+
+        }
+
+    }
+);
+
+
+function updateProgress() {
+
+    if (
+        player &&
+        typeof player.getCurrentTime === 'function'
+    ) {
+
+        const current =
+            player.getCurrentTime();
+
+        const dur =
+            player.getDuration();
+
+        document.getElementById('currentTime').innerText =
+            formatTime(current);
+
+        if (dur > 0) {
+
+            document.getElementById('totalTime').innerText =
+                formatTime(dur);
+
+            if (!isDraggingProgress) {
+
+                progressBar.value =
+                    (current / dur) * 100 || 0;
+
+            }
+
+        }
+
+    }
+
+}
+
+
+document
+    .getElementById('searchInput')
+    .addEventListener(
+        'keypress',
+        (e) => {
+
+            if (e.key === 'Enter') searchSong();
+
+        }
+    );
+
+
+document
+    .getElementById('playlistInput')
+    .addEventListener(
+        'keypress',
+        (e) => {
+
+            if (e.key === 'Enter')
+                addPlaylistInputSong();
+
+        }
+    );
+
+
+updatePlaylistUI();
+
+
+const tag =
+    document.createElement('script');
+
+tag.src =
+    "https://www.youtube.com/iframe_api";
+
+document.body.appendChild(tag);
+
+</script>
+
+<!-- ===== Foxxy Home Page (added) — only builds category cards and calls the existing searchSong() ===== -->
+<script>
+(function () {
+  const LANGS = ['Tamil', 'English'];
+  const VIBES = [
+    { name: 'Love', emoji: '\u{1F497}' }, { name: 'Sad', emoji: '\u{1F622}' },
+    { name: 'Melody', emoji: '\u{1F3B6}' }, { name: 'Rock', emoji: '\u{1F3B8}' }
+  ];
+  const KEY = 'foxxyPrefs';
+  const $ = (id) => document.getElementById(id);
+  let prefs = null, draftLang = null, draftVibes = [];
+
+  try { prefs = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  if (!prefs || !LANGS.includes(prefs.language) || !Array.isArray(prefs.vibes) || !prefs.vibes.length) prefs = null;
+
+  function showHome() {
+    $('nowPlayingBtn').style.display = $('videoTitle').innerText !== 'Song Title' ? '' : 'none';
+    document.body.classList.add('home-open');
+  }
+  function showPlayer() { document.body.classList.remove('home-open'); }
+
+  // Searches the exact query, drops Shorts and very long videos, then starts from a random remaining result.
+  // Playback is handed to the existing playVideoData(), so the YouTube Mix / Next logic takes over as before.
+  const MIN_SEC = 120, MAX_SEC = 600;   // keep videos between 2 and 10 minutes (adjust if you like)
+  const lastPicked = {};
+
+  function isoToSec(d) {   // "PT4M13S" -> 253
+    const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(d || '');
+    return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0;
+  }
+  const looksLikeShort = (v) => /#shorts?\b/i.test(v.snippet.title + ' ' + (v.snippet.description || ''));
+
+  function pickAndPlay(pool, query) {
+    if (!pool.length) { searchSong(query); return; }   // nothing suitable: original behaviour
+    if (pool.length > 1) pool = pool.filter((v) => v.id.videoId !== lastPicked[query]);   // avoid repeating last pick
+    const v = pool[Math.floor(Math.random() * pool.length)];
+    lastPicked[query] = v.id.videoId;
+    const t = v.snippet.thumbnails;
+    playVideoData(v.id.videoId, v.snippet.title, (t.medium || t.default).url, v.snippet.channelTitle);
+  }
+
+  function playRandomFromSearch(query) {
+    fetch('https://youtube.googleapis.com/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) +
+          '&key=' + getApiKey() + '&type=video&videoCategoryId=10&maxResults=20')
+      .then((res) => res.json())
+      .then((data) => {
+        const items = (data.items || []).filter((v) => v.id && v.id.videoId && !looksLikeShort(v));
+        if (!items.length) { searchSong(query); return; }
+        // Look up real durations (cheap videos.list call), then keep only song-length videos
+        return fetch('https://youtube.googleapis.com/youtube/v3/videos?part=contentDetails&id=' +
+                     items.map((v) => v.id.videoId).join(',') + '&key=' + getApiKey())
+          .then((r) => r.json())
+          .then((d) => {
+            if (!d.items) return items;   // lookup failed: skip the length filter instead of failing
+            const secs = {};
+            d.items.forEach((x) => { secs[x.id] = isoToSec(x.contentDetails.duration); });
+            return items.filter((v) => secs[v.id.videoId] >= MIN_SEC && secs[v.id.videoId] <= MAX_SEC);
+          })
+          .catch(() => items)
+          .then((pool) => pickAndPlay(pool, query));
+      })
+      .catch(() => searchSong(query));
+  }
+
+  function renderCards() {
+    $('homeSub').textContent = prefs.language + ' \u00B7 ' + prefs.vibes.join(', ');
+    $('catGrid').innerHTML = '';
+    prefs.vibes.forEach((vibe) => {
+      const v = VIBES.find((x) => x.name === vibe);
+      const query = 'latest ' + prefs.language + ' ' + vibe + ' songs';   // e.g. "latest Tamil Love songs"
+      const b = document.createElement('button');
+      b.className = 'cat-card cat-' + vibe;
+      b.innerHTML = '<span class="emoji">' + v.emoji + '</span><span><div class="name">' +
+        prefs.language + ' ' + vibe + ' Songs</div><div class="sub">Tap to play</div></span>';
+      b.onclick = () => { showPlayer(); playRandomFromSearch(query); };   // random top result -> existing playVideoData -> YouTube Mix
+      $('catGrid').appendChild(b);
+    });
+  }
+
+  function drawChips() {
+    $('obLang').innerHTML = ''; $('obVibe').innerHTML = '';
+    LANGS.forEach((l) => {
+      const c = document.createElement('button');
+      c.className = 'chip' + (draftLang === l ? ' on' : ''); c.textContent = l;
+      c.onclick = () => { draftLang = l; drawChips(); };
+      $('obLang').appendChild(c);
+    });
+    VIBES.forEach((v) => {
+      const c = document.createElement('button');
+      c.className = 'chip' + (draftVibes.includes(v.name) ? ' on' : ''); c.textContent = v.emoji + ' ' + v.name;
+      c.onclick = () => {
+        draftVibes = draftVibes.includes(v.name) ? draftVibes.filter((x) => x !== v.name) : draftVibes.concat(v.name);
+        drawChips();
+      };
+      $('obVibe').appendChild(c);
+    });
+    $('obGo').disabled = !(draftLang && draftVibes.length);
+  }
+
+  function openOnboarding() {
+    draftLang = prefs ? prefs.language : null;
+    draftVibes = prefs ? prefs.vibes.slice() : [];
+    $('obCancel').style.display = prefs ? '' : 'none';
+    drawChips();
+    $('onboard').classList.add('show');
+  }
+
+  $('obGo').onclick = () => {
+    prefs = { language: draftLang, vibes: VIBES.map((v) => v.name).filter((n) => draftVibes.includes(n)) };
+    try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch (e) {}
+    $('onboard').classList.remove('show');
+    renderCards(); showHome();
+  };
+  $('obCancel').onclick = () => $('onboard').classList.remove('show');
+  $('editPrefsBtn').onclick = openOnboarding;
+  $('homeBtn').onclick = showHome;
+  $('nowPlayingBtn').onclick = showPlayer;
+
+  // Leave Home view when a song is started from the existing search bar or playlist
+  const searchInput = $('searchInput');
+  document.querySelector('.search-bar button').addEventListener('click', () => { if (searchInput.value.trim()) showPlayer(); });
+  searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && searchInput.value.trim()) showPlayer(); });
+  $('playlist').addEventListener('click', showPlayer);
+
+  if (prefs) { renderCards(); showHome(); } else { openOnboarding(); showHome(); }
+})();
+</script>
+
+</body>
+</html>
